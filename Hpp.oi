@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator HPP Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 700; background-color: #eff6ff; }
+        .tab-inactive { color: #6b7280; font-weight: 500; }
+        .tab-inactive:hover { background-color: #f9fafb; color: #374151; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-6 text-center">
+            <h1 class="text-3xl font-extrabold tracking-tight">Kalkulator HPP Pro</h1>
+            <p class="text-sm mt-2 opacity-90 font-medium">Hitung Harga Pokok & Harga Jual Ideal</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-slate-200">
+            <button id="tab-fb" class="flex-1 py-4 text-center tab-active transition-all focus:outline-none text-sm md:text-base" onclick="switchTab('fb')">
+                🍳 HPP Resep / Dapur
+            </button>
+            <button id="tab-dagang" class="flex-1 py-4 text-center tab-inactive transition-all focus:outline-none text-sm md:text-base" onclick="switchTab('dagang')">
+                📦 HPP Retail / Toko
+            </button>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <!-- Mode 1: HPP Resep / Food & Beverage -->
+            <div id="mode-fb" class="space-y-5">
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+                    <h3 class="font-semibold text-blue-800 mb-1">Daftar Bahan Baku (Recipe Costing)</h3>
+                    <p class="text-xs text-blue-600">Masukkan semua bahan yang digunakan untuk satu resep/batch produksi.</p>
+                </div>
+                
+                <div id="bahan-container" class="space-y-3">
+                    <div class="flex gap-2 items-center bahan-row">
+                        <input type="text" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nama Bahan (mis: Daging Sapi)">
+                        <div class="relative w-2/5">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                            <input type="text" inputmode="numeric" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 harga-bahan" placeholder="0" onkeyup="formatRupiahInput(this)">
+                        </div>
+                        <button onclick="hapusBahan(this)" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg font-bold transition-colors" title="Hapus Bahan">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="tambahBahan()" class="flex items-center text-blue-600 text-sm font-bold hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Tambah Bahan
+                </button>
+
+                <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-200">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Hasil Porsi (Yield)</label>
+                        <input type="text" inputmode="numeric" id="jumlah-porsi" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-center font-bold" value="1" onkeyup="formatRupiahInput(this)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Target HPP / Food Cost (%)</label>
+                        <div class="relative">
+                            <input type="text" inputmode="numeric" id="target-margin-fb" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-center font-bold" placeholder="Misal: 35">
+                            <span class="absolute right-3 top-2.5 text-slate-500 text-sm">%</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">*Standar F&B idealnya 30-35%</p>
+                    </div>
+                </div>
+
+                <button onclick="hitungHPPFB()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl mt-4 shadow-lg shadow-blue-200 transition duration-200 transform hover:-translate-y-0.5">
+                    Hitung HPP Resep
+                </button>
+            </div>
+
+            <!-- Mode 2: HPP Retail / Dagang -->
+            <div id="mode-dagang" class="hidden space-y-4">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Persediaan Awal</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                            <input type="text" inputmode="numeric" id="persediaan-awal" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" onkeyup="formatRupiahInput(this)">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Pembelian Barang</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                            <input type="text" inputmode="numeric" id="pembelian" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" onkeyup="formatRupiahInput(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Biaya Angkut Pembelian</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                        <input type="text" inputmode="numeric" id="biaya-angkut" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" onkeyup="formatRupiahInput(this)">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Retur Pembelian (-)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                            <input type="text" inputmode="numeric" id="retur" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-red-600" placeholder="0" onkeyup="formatRupiahInput(this)">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Potongan / Diskon (-)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                            <input type="text" inputmode="numeric" id="diskon" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-red-600" placeholder="0" onkeyup="formatRupiahInput(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Persediaan Akhir</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                        <input type="text" inputmode="numeric" id="persediaan-akhir" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none font-bold" placeholder="0" onkeyup="formatRupiahInput(this)">
+                    </div>
+                </div>
+
+                <button onclick="hitungHPPDagang()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl mt-6 shadow-lg shadow-blue-200 transition duration-200 transform hover:-translate-y-0.5">
+                    Hitung HPP Toko
+                </button>
+            </div>
+
+            <!-- Area Hasil Output -->
+            <div id="hasil-container" class="mt-8 bg-slate-50 border-2 border-emerald-500 rounded-xl overflow-hidden hidden">
+                <div class="bg-emerald-500 text-white p-3 text-center">
+                    <h2 class="font-bold text-lg">Ringkasan Perhitungan</h2>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                        <span class="text-slate-600 font-medium">HPP Pokok:</span>
+                        <span id="hasil-hpp" class="text-2xl font-extrabold text-slate-800">Rp 0</span>
+                    </div>
+                    
+                    <div id="hasil-jual-container" class="flex justify-between items-center pb-3 border-b border-slate-200 hidden">
+                        <div class="flex flex-col">
+                            <span class="text-slate-600 font-medium">Harga Jual Ideal:</span>
+                            <span id="label-margin" class="text-xs text-emerald-600 font-bold"></span>
+                        </div>
+                        <span id="hasil-jual" class="text-2xl font-extrabold text-emerald-600">Rp 0</span>
+                    </div>
+
+                    <p id="hasil-detail" class="text-sm text-slate-500 italic text-center bg-white p-3 rounded border border-slate-100"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk format rupiah dengan titik otomatis saat mengetik
+        function formatRupiahInput(input) {
+            let value = input.value.replace(/\./g, ''); // Hapus semua titik
+            value = value.replace(/[^0-9]/g, ''); // Pastikan hanya angka
+            
+            if (value !== '') {
+                input.value = new Intl.NumberFormat('id-ID').format(value);
+            } else {
+                input.value = '';
+            }
+        }
+
+        // Fungsi membaca angka asli (raw number) untuk dihitung
+        function getRawNumber(value) {
+            if (!value) return 0;
+            return parseFloat(value.replace(/\./g, '')) || 0;
+        }
+
+        // Fungsi format rupiah untuk output
+        const formatOutputRupiah = (angka) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        };
+
+        // Fungsi pindah tab
+        function switchTab(mode) {
+            document.getElementById('hasil-container').classList.add('hidden');
+            
+            const btnFb = document.getElementById('tab-fb');
+            const btnDagang = document.getElementById('tab-dagang');
+            const modeFb = document.getElementById('mode-fb');
+            const modeDagang = document.getElementById('mode-dagang');
+
+            if (mode === 'fb') {
+                modeFb.classList.remove('hidden');
+                modeDagang.classList.add('hidden');
+                
+                btnFb.className = 'flex-1 py-4 text-center tab-active transition-all focus:outline-none text-sm md:text-base';
+                btnDagang.className = 'flex-1 py-4 text-center tab-inactive transition-all focus:outline-none text-sm md:text-base';
+            } else {
+                modeDagang.classList.remove('hidden');
+                modeFb.classList.add('hidden');
+                
+                btnDagang.className = 'flex-1 py-4 text-center tab-active transition-all focus:outline-none text-sm md:text-base';
+                btnFb.className = 'flex-1 py-4 text-center tab-inactive transition-all focus:outline-none text-sm md:text-base';
+            }
+        }
+
+        // HPP Dapur / Resep
+        function tambahBahan() {
+            const container = document.getElementById('bahan-container');
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center bahan-row mt-3';
+            row.innerHTML = `
+                <input type="text" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nama Bahan">
+                <div class="relative w-2/5">
+                    <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Rp</span>
+                    <input type="text" inputmode="numeric" class="w-full border border-slate-300 rounded-lg p-2.5 pl-8 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 harga-bahan" placeholder="0" onkeyup="formatRupiahInput(this)">
+                </div>
+                <button onclick="hapusBahan(this)" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg font-bold transition-colors" title="Hapus Bahan">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        function hapusBahan(btn) {
+            btn.parentElement.remove();
+        }
+
+        function hitungHPPFB() {
+            const inputs = document.querySelectorAll('.harga-bahan');
+            let totalBiaya = 0;
+            
+            inputs.forEach(input => {
+                totalBiaya += getRawNumber(input.value);
+            });
+
+            const porsi = getRawNumber(document.getElementById('jumlah-porsi').value) || 1;
+            const hppPerPorsi = totalBiaya / porsi;
+            
+            const targetPersen = getRawNumber(document.getElementById('target-margin-fb').value);
+            let hargaJual = 0;
+            let teksDetail = `Total Keseluruhan Modal Bahan: ${formatOutputRupiah(totalBiaya)} dibagi ${porsi} porsi.`;
+
+            if(targetPersen > 0) {
+                hargaJual = hppPerPorsi / (targetPersen / 100);
+            }
+
+            tampilkanHasil(hppPerPorsi, hargaJual, targetPersen, teksDetail);
+        }
+
+        // HPP Toko / Dagang
+        function hitungHPPDagang() {
+            const awal = getRawNumber(document.getElementById('persediaan-awal').value);
+            const beli = getRawNumber(document.getElementById('pembelian').value);
+            const angkut = getRawNumber(document.getElementById('biaya-angkut').value);
+            const retur = getRawNumber(document.getElementById('retur').value);
+            const diskon = getRawNumber(document.getElementById('diskon').value);
+            const akhir = getRawNumber(document.getElementById('persediaan-akhir').value);
+
+            const pembelianBersih = (beli + angkut) - (retur + diskon);
+            const barangSiapJual = awal + pembelianBersih;
+            const hpp = barangSiapJual - akhir;
+
+            let teksDetail = `Pembelian Bersih: ${formatOutputRupiah(pembelianBersih)} <br> Barang Siap Dijual: ${formatOutputRupiah(barangSiapJual)}`;
+            
+            tampilkanHasil(hpp, 0, 0, teksDetail);
+        }
+
+        // Output Display
+        function tampilkanHasil(hpp, hargaJual, margin, detailTeks) {
+            const container = document.getElementById('hasil-container');
+            const hjContainer = document.getElementById('hasil-jual-container');
+            
+            document.getElementById('hasil-hpp').innerText = formatOutputRupiah(hpp);
+            document.getElementById('hasil-detail').innerHTML = detailTeks;
+
+            if(hargaJual > 0) {
+                hjContainer.classList.remove('hidden');
+                hjContainer.classList.add('flex');
+                document.getElementById('hasil-jual').innerText = formatOutputRupiah(hargaJual);
+                document.getElementById('label-margin').innerText = `(Target Food Cost: ${margin}%)`;
+            } else {
+                hjContainer.classList.add('hidden');
+                hjContainer.classList.remove('flex');
+            }
+
+            container.classList.remove('hidden');
+            
+            // Scroll ke hasil
+            container.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    </script>
+</body>
+</html>
